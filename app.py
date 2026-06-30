@@ -30,24 +30,6 @@ def neon_theme():
     }
 alt.themes.register('neon_theme', neon_theme); alt.themes.enable('neon_theme')
 
-# 4. Global Geographic Indices Mapping Keys
-US_STATE_MAPPING = {"California": 6, "Texas": 48, "New York": 36, "Florida": 12, "Illinois": 17, "Pennsylvania": 42, "Ohio": 39, "Michigan": 26, "Georgia": 13, "North Carolina": 37}
-EU_COUNTRY_MAPPING = {"Germany": 276, "France": 250, "United Kingdom": 826, "Italy": 380, "Spain": 724, "Poland": 616, "Netherlands": 528, "Belgium": 56, "Sweden": 752, "Austria": 40}
-
-# 5. Simulated Analytical Business Dataset Cache Engine
-@st.cache_data
-def load_dashboard_cache_arrays():
-    np.random.seed(101); months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul']
-    timeline_rows = []
-    for m in months:
-        for cat in ['ONE', 'TWO', 'THREE', 'FOUR']:
-            timeline_rows.append({"Month": m, "Category": cat, "Value": int(np.random.randint(2, 6)), "ScatterX": int(np.random.randint(10, 70)), "ScatterY": int(np.random.randint(5, 45))})
-    geo_rows = []
-    for name, uid in US_STATE_MAPPING.items(): geo_rows.append({"Type": "US", "Name": name, "id": uid, "Value": float(np.random.randint(50, 100))})
-    for name, uid in EU_COUNTRY_MAPPING.items(): geo_rows.append({"Type": "EU", "Name": name, "id": uid, "Value": float(np.random.randint(40, 95))})
-    return pd.DataFrame(timeline_rows), pd.DataFrame(geo_rows)
-
-df_timeline, df_geo = load_dashboard_cache_arrays()
 # 1. Global Slicers & Sidebar Filters UI
 st.sidebar.subheader("⏳ Global Slicers & Filters")
 st.sidebar.markdown("---")
@@ -74,8 +56,8 @@ with r1_c1:
     with g_col4: st.altair_chart(draw_radial_ring(25, "#4ade80"))
 with r1_c2:
     st.markdown("<p style='text-align:center; font-size:11px; margin:0; color:#94a3b8;'>👥 POPULATION TRACKER</p>", unsafe_allow_html=True)
-    pop_df = pd.DataFrame({"x": np.repeat(range(5), 4), "y": np.tile(range(4), 5), "val": np.random.choice([1, 0], 20)})
-    pop_grid = alt.Chart(pop_df).mark_square(size=120).encode(x=alt.X('x:O', axis=None), y=alt.Y('y:O', axis=None), color=alt.Color('val:N', scale=alt.Scale(domain=[1, 0], range=["#ec4899", "#334155"]), legend=None)).properties(width=120, height=65)
+    pop_df = pd.DataFrame({"x": np.repeat(range(5), 4), "y": np.tile(range(4), 5), "val": np.random.choice([0, 1], 20)})
+    pop_grid = alt.Chart(pop_df).mark_square(size=120).encode(x=alt.X('x:O', axis=None), y=alt.Y('y:O', axis=None), color=alt.Color('val:N', scale=alt.Scale(domain=[0, 1], range=["#334155", "#ec4899"]), legend=None)).properties(width=120, height=65)
     st.altair_chart(pop_grid, use_container_width=True)
 with r1_c3:
     st.markdown("<p style='text-align:right; font-size:11px; margin:0; color:#94a3b8;'>📐 CAPACITIES RATIO</p>", unsafe_allow_html=True)
@@ -92,7 +74,7 @@ with r2_c1:
     st.altair_chart(scat, use_container_width=True)
 with r2_c2:
     st.markdown("<p style='font-size:12px; color:#94a3b8; font-weight:bold;'>📊 PERFORMANCE CAP BARS</p>", unsafe_allow_html=True)
-    bars = alt.Chart(pd.DataFrame({"Metric": ["A", "B", "C", "D"], "Val": [85, 60, 45, 90]})).mark_bar(height=14, cornerRadiusEnd=4).encode(x=alt.X('Val:Q', axis=None), y=alt.Y('Metric:N', axis=None), color=alt.Color('Metric:N', scale=alt.Scale(range=["#ec4899", "#38bdf8", "#a855f7", "#4ade80"]), legend=None)).properties(height=160)
+    bars = alt.Chart(pd.DataFrame({"Metric": ["A", "B", "C", "D"], "Val": [80, 65, 90, 45]})).mark_bar(height=14, cornerRadiusEnd=4).encode(x=alt.X('Val:Q', axis=None), y=alt.Y('Metric:N', axis=None), color=alt.Color('Metric:N', scale=alt.Scale(range=["#ec4899", "#38bdf8", "#a855f7", "#4ade80"]), legend=None)).properties(height=160)
     st.altair_chart(bars, use_container_width=True)
 with r2_c3:
     st.markdown("<p style='font-size:12px; color:#94a3b8; font-weight:bold;'>📈 MULTI-LAYER TRAJECTORY VELOCITY</p>", unsafe_allow_html=True)
@@ -117,7 +99,7 @@ with r3_c3:
     st.altair_chart(us_geo, use_container_width=True)
 with r3_c4:
     st.markdown("<p style='font-size:12px; color:#94a3b8; font-weight:bold;'>🇪🇺 EUROPE MARKET SHARE MAP</p>", unsafe_allow_html=True)
-    eu_geo = alt.Chart(alt.topo_feature(data.world_110m.url, 'countries')).mark_geoshape(stroke="#121629", strokeWidth=0.5).encode(color=alt.Color('Value:Q', scale=alt.Scale(scheme='plasma'), legend=None)).transform_lookup(lookup='id', from_=alt.LookupData(df_geo[df_geo["Type"]=="EU"], 'id', ['Value'])).properties(height=150).project(type='mercator', scale=160, center=[15, 50])
+    eu_geo = alt.Chart(alt.topo_feature(data.world_110m.url, 'countries')).mark_geoshape(stroke="#121629", strokeWidth=0.5).encode(color=alt.Color('Value:Q', scale=alt.Scale(scheme='plasma'), legend=None)).transform_lookup(lookup='id', from_=alt.LookupData(df_geo[df_geo["Type"]=="EU"], 'id', ['Value'])).properties(height=150).project(type='mercator', scale=160, center=[10, 52])
     st.altair_chart(eu_geo, use_container_width=True)
 
 st.markdown("---")
