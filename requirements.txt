@@ -4,3 +4,4 @@ numpy
 altair
 jinja2
 matplotlib
+vega-datasets
