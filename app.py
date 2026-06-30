@@ -1,6 +1,3 @@
-# ==========================================
-# BLOCK 1: INITIALIZATION, CONFIGURATION, AND DATA PIPELINE
-# ==========================================
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -51,9 +48,6 @@ def load_dashboard_cache_arrays():
     return pd.DataFrame(timeline_rows), pd.DataFrame(geo_rows)
 
 df_timeline, df_geo = load_dashboard_cache_arrays()
-# ==========================================
-# BLOCK 2: CONTROL FILTERS, RUNTIME DATA SELECTION, AND UI GRID CANVAS
-# ==========================================
 # 1. Global Slicers & Sidebar Filters UI
 st.sidebar.subheader("⏳ Global Slicers & Filters")
 st.sidebar.markdown("---")
@@ -98,7 +92,7 @@ with r2_c1:
     st.altair_chart(scat, use_container_width=True)
 with r2_c2:
     st.markdown("<p style='font-size:12px; color:#94a3b8; font-weight:bold;'>📊 PERFORMANCE CAP BARS</p>", unsafe_allow_html=True)
-    bars = alt.Chart(pd.DataFrame({"Metric": ["A", "B", "C", "D"], "Val": [45, 30, 20, 48]})).mark_bar(height=14, cornerRadiusEnd=4).encode(x=alt.X('Val:Q', axis=None), y=alt.Y('Metric:N', axis=None), color=alt.Color('Metric:N', scale=alt.Scale(range=["#ec4899", "#38bdf8", "#a855f7", "#4ade80"]), legend=None)).properties(height=160)
+    bars = alt.Chart(pd.DataFrame({"Metric": ["A", "B", "C", "D"], "Val": [35, 42, 18, 50]})).mark_bar(height=14, cornerRadiusEnd=4).encode(x=alt.X('Val:Q', axis=None), y=alt.Y('Metric:N', axis=None), color=alt.Color('Metric:N', scale=alt.Scale(range=["#ec4899", "#38bdf8", "#a855f7", "#4ade80"]), legend=None)).properties(height=160)
     st.altair_chart(bars, use_container_width=True)
 with r2_c3:
     st.markdown("<p style='font-size:12px; color:#94a3b8; font-weight:bold;'>📈 MULTI-LAYER TRAJECTORY VELOCITY</p>", unsafe_allow_html=True)
@@ -140,5 +134,5 @@ with r4_c2:
     st.altair_chart(area, use_container_width=True)
 with r4_c3:
     st.markdown("<p style='font-size:12px; color:#94a3b8; font-weight:bold;'>📐 CAPACITY PRIORITIZATION PYRAMID</p>", unsafe_allow_html=True)
-    pyr = alt.Chart(pd.DataFrame({"Layer": ["Tier 1", "Tier 2", "Tier 3", "Tier 4"], "Width": [10, 25, 45, 70]})).mark_bar(align="center").encode(x=alt.X('Width:Q', axis=None), y=alt.Y('Layer:N', sort='descending', axis=None), color=alt.Color('Layer:N', scale=alt.Scale(scheme='cool'), legend=None)).properties(height=140)
+    pyr = alt.Chart(pd.DataFrame({"Layer": ["Tier 1", "Tier 2", "Tier 3", "Tier 4"], "Width": [10, 20, 30, 40]})).mark_bar(align="center").encode(x=alt.X('Width:Q', axis=None), y=alt.Y('Layer:N', sort='descending', axis=None), color=alt.Color('Layer:N', scale=alt.Scale(scheme='cool'), legend=None)).properties(height=140)
     st.altair_chart(pyr, use_container_width=True)
