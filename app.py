@@ -62,19 +62,16 @@ alt.themes.enable('neon_theme')
 @st.cache_data
 def get_geo_enterprise_data():
     np.random.seed(42)
-    # Target specific US state IDs matching standard geographic topofeatures 
-    us_states = [6, 12, 36, 48, 53] # California, Florida, New York, Texas, Washington
-    # Target specific European numeric country IDs matching vega maps
-    eu_countries = [250, 276, 380, 724, 826] # France, Germany, Italy, Spain, UK
+    # Correct numerical ANSI/ISO mapping keys for regions
+    us_states = [6, 12, 36, 48, 53]      # California, Florida, New York, Texas, Washington
+    eu_countries = [276, 250, 380, 724, 826] # Germany, France, Italy, Spain, United Kingdom
     
     rows = []
     for _ in range(1500):
-        # US State data generation loop
         state_id = np.random.choice(us_states)
         rev_us = float(np.random.exponential(scale=7000) + 2000)
         rows.append({"type": "US", "id": state_id, "Revenue": rev_us})
         
-        # European Country data generation loop
         country_id = np.random.choice(eu_countries)
         rev_eu = float(np.random.exponential(scale=6500) + 1500)
         rows.append({"type": "EU", "id": country_id, "Revenue": rev_eu})
@@ -98,10 +95,9 @@ map_col1, map_col2 = st.columns(2)
 with map_col1:
     st.markdown("#### 🇺🇸 US Regional Performance Territory Map")
     
-    # 1. Fetch geographic shape arrays for the United States
+    # Corrected dataset URL pointer for standard US states
     states_topo = alt.topo_feature(data.us_10m.url, 'states')
     
-    # 2. Build the visual geographic layer
     us_map = alt.Chart(states_topo).mark_geoshape().encode(
         color=alt.Color('Revenue:Q', 
                         scale=alt.Scale(scheme='magma', domain=[df_us_agg['Revenue'].min(), df_us_agg['Revenue'].max()]),
@@ -121,10 +117,9 @@ with map_col1:
 with map_col2:
     st.markdown("#### 🇪🇺 European Country Market Share Map")
     
-    # 1. Fetch geographic shape arrays for the World 
-    world_topo = alt.topo_feature(data.world_10m.url, 'countries')
+    # FIX: Correct dataset endpoint name is world_110m
+    world_topo = alt.topo_feature(data.world_110m.url, 'countries')
     
-    # 2. Build the visual geographic layer for Europe boundaries
     eu_map = alt.Chart(world_topo).mark_geoshape(stroke="#171b30", strokeWidth=1).encode(
         color=alt.Color('Revenue:Q', 
                         scale=alt.Scale(scheme='plasma', domain=[df_eu_agg['Revenue'].min(), df_eu_agg['Revenue'].max()]),
@@ -138,8 +133,8 @@ with map_col2:
         height=350
     ).project(
         type='mercator',
-        scale=380,              # Zoom coordinate matching image frame bounds
-        center=[10, 52]         # Map coordinates focused over Continental Europe
+        scale=350,              
+        center=[10, 52]  # Focus coordinates centered over Western Europe
     )
     st.altair_chart(eu_map, use_container_width=True)
 
