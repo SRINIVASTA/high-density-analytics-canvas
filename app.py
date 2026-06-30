@@ -5,12 +5,75 @@ import altair as alt
 
 # --- 1. SET UP DESKTOP LAYOUT CONFIGURATION ---
 st.set_page_config(
-    page_title="Enterprise Analytics - Power BI Canvas",
+    page_title="Enterprise Analytics - High-Density Canvas",
     layout="wide", 
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed" # Collapsed to maximize canvas area
 )
 
-# --- 2. GENERATE COMPREHENSIVE ENTERPRISE DATASET ---
+# --- 2. CUSTOM NEON DARK THEME INJECTION (CSS) ---
+st.markdown("""
+    <style>
+        /* Main background color matching the image */
+        .stApp {
+            background-color: #171b30 !important;
+            color: #ffffff !important;
+        }
+        /* Style standard text and headers to neon white/pink */
+        h1, h2, h3, h4, h5, h6, p, label, span, .stMarkdown {
+            color: #ffffff !important;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+        }
+        /* Custom styling for Streamlit metric widgets */
+        [data-testid="stMetricValue"] {
+            color: #f43f5e !important; /* Neon Pink */
+            font-size: 2.2rem !important;
+            font-weight: 700;
+        }
+        [data-testid="stMetricLabel"] {
+            color: #94a3b8 !important; /* Muted Slate */
+        }
+        /* Clean tabs matching dark theme */
+        .stTabs [data-baseweb="tab-list"] {
+            background-color: #111424;
+            padding: 5px;
+            border-radius: 8px;
+        }
+        .stTabs [data-baseweb="tab"] {
+            color: #94a3b8 !important;
+        }
+        .stTabs [aria-selected="true"] {
+            color: #38bdf8 !important; /* Neon Cyan */
+            border-bottom-color: #38bdf8 !important;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
+# --- 3. ALTAIR NEON DATA GLOBAL VISUAL THEME CONFIG ---
+def neon_theme():
+    return {
+        'config': {
+            'background': '#171b30',
+            'view': {'stroke': 'transparent'},
+            'axis': {
+                'domainColor': '#475569',
+                'gridColor': '#334155',
+                'labelColor': '#94a3b8',
+                'titleColor': '#ffffff',
+                'tickColor': '#475569'
+            },
+            'legend': {
+                'labelColor': '#94a3b8',
+                'titleColor': '#ffffff'
+            },
+            'range': {
+                'category': ['#f43f5e', '#38bdf8', '#a855f7', '#34d399', '#fbbf24'] # Pink, Cyan, Purple, Green, Yellow
+            }
+        }
+    }
+alt.themes.register('neon_theme', neon_theme)
+alt.themes.enable('neon_theme')
+
+# --- 4. GENERATE COMPREHENSIVE DATASET ---
 @st.cache_data
 def get_enterprise_data():
     np.random.seed(42)
@@ -36,130 +99,106 @@ def get_enterprise_data():
     df["Net Profit"] = df["Gross Revenue"] * df["Profit Margin"]
     return df
 
-df_raw = get_enterprise_data()
+df_filtered = get_enterprise_data()
 
-# --- 3. POWER BI FILTER PANE (SIDEBAR) ---
-st.sidebar.header("⏳ Global Slicers & Filters")
-st.sidebar.markdown("---")
+# --- 5. APP CONTAINER LAYOUT ---
+st.title("📊 High-Density Infographic Canvas")
+st.markdown("---")
 
-min_date, max_date = df_raw["Date"].min().to_pydatetime(), df_raw["Date"].max().to_pydatetime()
+# --- ROW 1: INFOGRAPHIC METRIC RINGS (Radial Progress Gauges) ---
+st.markdown("### 🎯 Core Target Capacities")
+ring_col1, ring_col2, ring_col3, ring_col4 = st.columns(4)
 
-# Date Range Picker Slicer with Safe Empty Handling
-selected_dates = st.sidebar.date_input(
-    "Date Horizon Window", 
-    value=[min_date, max_date], 
-    min_value=min_date, 
-    max_value=max_date
-)
+def make_radial_chart(value, label, color):
+    source = pd.DataFrame({"values": [value, 100 - value], "category": ["Completed", "Remaining"]})
+    chart = alt.Chart(source).mark_arc(innerRadius=45, outerRadius=60).encode(
+        theta=alt.Theta(field="values", type="quantitative"),
+        color=alt.Color(field="category", type="nominal", scale=alt.Scale(domain=["Completed", "Remaining"], range=[color, "#1e293b"]), legend=None),
+    ).properties(width=140, height=140)
+    
+    text = alt.Chart(pd.DataFrame({"text": [f"{value}%"]})).mark_text(
+        align='center', baseline='middle', fontSize=18, color='#ffffff', fontWeight='bold'
+    ).encode(text='text:N')
+    
+    return chart + text
 
-# Multi-select Categorical Slicers
-selected_regions = st.sidebar.multiselect("Geographic Regions", options=list(df_raw["Region"].unique()), default=list(df_raw["Region"].unique()))
-selected_segments = st.sidebar.multiselect("Market Segments", options=list(df_raw["Segment"].unique()), default=list(df_raw["Segment"].unique()))
-selected_products = st.sidebar.multiselect("Product Offerings", options=list(df_raw["Product Suite"].unique()), default=list(df_raw["Product Suite"].unique()))
+with ring_col1:
+    st.altair_chart(make_radial_chart(80, "Enterprise", "#f43f5e"), use_container_width=False)
+    st.caption("🚀 Target Growth Segment")
+with ring_col2:
+    st.altair_chart(make_radial_chart(75, "Mid-Market", "#38bdf8"), use_container_width=False)
+    st.caption("🌐 Regional Operations")
+with ring_col3:
+    st.altair_chart(make_radial_chart(50, "SMB", "#a855f7"), use_container_width=False)
+    st.caption("⚡ Product Portfolio")
+with ring_col4:
+    st.altair_chart(make_radial_chart(25, "Public", "#34d399"), use_container_width=False)
+    st.caption("🔒 Security Compliance")
 
-# FIX: Hardened Slicer Range Check Logic (handles mid-click single date states)
-if isinstance(selected_dates, list) or isinstance(selected_dates, tuple):
-    if len(selected_dates) == 2:
-        start_d, end_d = pd.Timestamp(selected_dates[0]), pd.Timestamp(selected_dates[1])
-    elif len(selected_dates) == 1:
-        start_d = pd.Timestamp(selected_dates[0])
-        end_d = pd.Timestamp(max_date)
-    else:
-        start_d, end_d = pd.Timestamp(min_date), pd.Timestamp(max_date)
-else:
-    # Fallback if UI element passes single instance object value
-    start_d = pd.Timestamp(selected_dates)
-    end_d = pd.Timestamp(max_date)
+st.markdown("---")
 
-# Memory Array Boolean Array Filtering Sequence
-df_filtered = df_raw[
-    (df_raw["Date"] >= start_d) & (df_raw["Date"] <= end_d) &
-    (df_raw["Region"].isin(selected_regions)) &
-    (df_raw["Segment"].isin(selected_segments)) &
-    (df_raw["Product Suite"].isin(selected_products))
-]
+# --- ROW 2: MULTI-COLUMN DATA MATRIX VISUALS ---
+chart_row_col1, chart_row_col2, chart_row_col3 = st.columns([1, 1, 1])
 
-# --- 4. MAIN CANVAS HEADERS ---
-st.title("📊 Power BI Native Functional Emulator")
-st.caption("Active Desktop Mode | Instant Matrix Cross-Filtering Array Engine")
+with chart_row_col1:
+    st.markdown("#### 🍩 Segment Distribution")
+    donut_chart = alt.Chart(df_filtered).mark_arc(innerRadius=40).encode(
+        theta=alt.Theta(field="Gross Revenue", type="quantitative", aggregate="sum"),
+        color=alt.Color(field="Segment", type="nominal"),
+        tooltip=["Segment", "sum(Gross Revenue)"]
+    ).properties(height=230)
+    st.altair_chart(donut_chart, use_container_width=True)
 
-# --- 5. HIGH-DENSITY KPI TILES ---
-st.markdown("### 🔑 Key Performance Metrics")
-kpi_col1, kpi_col2, kpi_col3, kpi_col4 = st.columns(4)
+with chart_row_col2:
+    st.markdown("#### 📊 Monthly Generation Trends")
+    df_filtered['Month'] = df_filtered['Date'].dt.strftime('%b')
+    month_order = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']
+    
+    bar_chart = alt.Chart(df_filtered).mark_bar(cornerRadiusTopLeft=4, cornerRadiusTopRight=4).encode(
+        x=alt.X('Month:N', sort=month_order, title=None),
+        y=alt.Y('sum(Gross Revenue):Q', title=None),
+        color=alt.value('#f43f5e') # Fixed neon pink bars
+    ).properties(height=230)
+    st.altair_chart(bar_chart, use_container_width=True)
 
-deal_count = len(df_filtered)
-if deal_count > 0:
-    total_rev = df_filtered["Gross Revenue"].sum()
-    total_profit = df_filtered["Net Profit"].sum()
-    avg_margin = df_filtered["Profit Margin"].mean() * 100
-    avg_ticket = total_rev / deal_count
-else:
-    total_rev, total_profit, avg_margin, avg_ticket = 0.0, 0.0, 0.0, 0.0
-
-with kpi_col1:
-    st.metric(label="Gross Revenue Portfolio", value=f"${total_rev:,.2f}", delta=f"{deal_count} Won Contracts")
-with kpi_col2:
-    st.metric(label="Net Operational Profits", value=f"${total_profit:,.2f}")
-with kpi_col3:
-    st.metric(label="Avg Combined Profit Margin", value=f"{avg_margin:.2f}%")
-with kpi_col4:
-    st.metric(label="Average Ticket Velocity Value", value=f"${avg_ticket:,.2f}")
-
-# --- 6. INTERACTIVE DUAL VISUALIZATION ROW ---
-chart_col1, chart_col2 = st.columns([2, 1])
-
-with chart_col1:
-    st.subheader("📈 Revenue Performance Trajectory Over Time")
-    if deal_count > 0:
-        # Resample data safely for time series aggregation
-        df_trend = df_filtered.resample('W', on='Date')[['Gross Revenue', 'Net Profit']].sum().reset_index()
-        
-        trend_chart = alt.Chart(df_trend).mark_area(opacity=0.3, color="#1f77b4").encode(
-            x=alt.X('Date:T', title='Timeline Window'),
-            y=alt.Y('Gross Revenue:Q', title='Gross Revenue ($)'),
-            tooltip=['Date:T', alt.Tooltip('Gross Revenue:Q', format='$,.2f')]
-        ).properties(height=350).interactive()
-        
-        line_chart = alt.Chart(df_trend).mark_line(color="#1f77b4", strokeWidth=3).encode(
-            x='Date:T',
-            y='Gross Revenue:Q'
-        )
-        st.altair_chart(trend_chart + line_chart, use_container_width=True)
-    else:
-        st.info("No timeline data matching current filters.")
-
-with chart_col2:
-    st.subheader("🍰 Product Revenue Mix")
-    if deal_count > 0:
-        donut_chart = alt.Chart(df_filtered).mark_arc(innerRadius=60).encode(
-            theta=alt.Theta(field="Gross Revenue", type="quantitative", aggregate="sum"),
-            color=alt.Color(field="Product Suite", type="nominal", scale=alt.Scale(scheme="tableau10")),
-            tooltip=["Product Suite", alt.Tooltip("sum(Gross Revenue):Q", format="$,.2f")]
-        ).properties(height=350)
-        st.altair_chart(donut_chart, use_container_width=True)
-    else:
-        st.info("No product mix matches found.")
-
-# --- 7. DRILL-DOWN DATA TABLE MATRIX ---
-st.subheader("🔍 Transaction Ledger Audit Trail Grid")
-tab_matrix, tab_raw_inspect = st.tabs(["Aggregated Matrix View", "Raw Segment Records Inspector"])
-
-with tab_matrix:
-    if deal_count > 0:
-        pivot_df = df_filtered.groupby(["Region", "Product Suite"])["Gross Revenue"].sum().unstack().fillna(0)
-        st.dataframe(pivot_df.style.format("${:,.2f}").background_gradient(cmap="Blues"), use_container_width=True)
-    else:
-        st.info("No matrix aggregations available for the selected filters.")
-
-with tab_raw_inspect:
-    st.dataframe(
-        df_filtered.sort_values(by="Date", ascending=False),
-        column_config={
-            "Date": st.column_config.DateColumn("Date Horizon"),
-            "Gross Revenue": st.column_config.NumberColumn("Total Sales Revenue", format="$%.2f"),
-            "Net Profit": st.column_config.NumberColumn("Net Earnings Margin", format="$%.2f"),
-            "Profit Margin": st.column_config.ProgressColumn("Margin Density Bar", min_value=0, max_value=1, format="%.2f")
-        },
-        use_container_width=True,
-        hide_index=True
+with chart_row_col3:
+    st.markdown("#### 📈 Multi-Layer Target Range")
+    df_trend = df_filtered.resample('W', on='Date')[['Gross Revenue', 'Net Profit']].sum().reset_index()
+    
+    area_chart = alt.Chart(df_trend).mark_area(opacity=0.2, color="#a855f7").encode(
+        x='Date:T', y='Gross Revenue:Q'
+    ).properties(height=230)
+    
+    line_chart = alt.Chart(df_trend).mark_line(color="#38bdf8", strokeWidth=2.5).encode(
+        x='Date:T', y='Net Profit:Q'
     )
+    st.altair_chart(area_chart + line_chart, use_container_width=True)
+
+st.markdown("---")
+
+# --- ROW 3: COMPLEX INFOGRAPHIC DRILL-DOWN ---
+bottom_col1, bottom_col2 = st.columns([2, 1])
+
+with bottom_col1:
+    st.markdown("#### 🧬 Product Distribution Matrix Grid")
+    grouped_bars = alt.Chart(df_filtered).mark_bar(size=12).encode(
+        x=alt.X('Product Suite:N', axis=alt.Axis(labels=False), title=None),
+        y=alt.Y('sum(Gross Revenue):Q', title=None),
+        color=alt.Color('Product Suite:N'),
+        column=alt.Column('Region:N', title=None, header=alt.Header(labelColor='#94a3b8', labelOrient='bottom'))
+    ).properties(height=200, width=110)
+    st.altair_chart(grouped_bars, use_container_width=False)
+
+with bottom_col2:
+    st.markdown("#### 📐 Target Pyramid Priority")
+    # Emulate the custom visual structures at the bottom right corner
+    pyramid_data = pd.DataFrame({
+        "Level": ["L1 - Core Strategy", "L2 - Execution", "L3 - Operations", "L4 - Deployment"],
+        "Value": [10, 30, 60, 100]
+    })
+    pyramid = alt.Chart(pyramid_data).mark_bar(invalid=None).encode(
+        x=alt.X('Value:Q', axis=None),
+        y=alt.Y('Level:N', sort='descending', title=None),
+        color=alt.Color('Level:N', scale=alt.Scale(scheme='magma'), legend=None)
+    ).properties(height=200)
+    st.altair_chart(pyramid, use_container_width=True)
