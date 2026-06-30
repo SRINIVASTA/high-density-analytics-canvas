@@ -76,7 +76,7 @@ with r1_c1:
 with r1_c2:
     st.markdown("<p style='text-align:center; font-size:11px; margin:0; color:#94a3b8;'>👥 POPULATION TRACKER</p>", unsafe_allow_html=True)
     pop_df = pd.DataFrame({"x": np.repeat(range(5), 4), "y": np.tile(range(4), 5), "val": np.random.choice([0, 1], 20)})
-    pop_grid = alt.Chart(pop_df).mark_square(size=120).encode(x=alt.X('x:O', axis=None), y=alt.Y('y:O', axis=None), color=alt.Color('val:N', scale=alt.Scale(domain=[1, 0], range=["#ec4899", "#334155"]), legend=None)).properties(width=120, height=65)
+    pop_grid = alt.Chart(pop_df).mark_square(size=120).encode(x=alt.X('x:O', axis=None), y=alt.Y('y:O', axis=None), color=alt.Color('val:N', scale=alt.Scale(domain=[0, 1], range=["#334155", "#ec4899"]), legend=None)).properties(width=120, height=65)
     st.altair_chart(pop_grid, use_container_width=True)
 with r1_c3:
     st.markdown("<p style='text-align:right; font-size:11px; margin:0; color:#94a3b8;'>📐 CAPACITIES RATIO</p>", unsafe_allow_html=True)
@@ -93,7 +93,7 @@ with r2_c1:
     st.altair_chart(scat, use_container_width=True)
 with r2_c2:
     st.markdown("<p style='font-size:12px; color:#94a3b8; font-weight:bold;'>📊 PERFORMANCE CAP BARS</p>", unsafe_allow_html=True)
-    bars = alt.Chart(pd.DataFrame({"Metric": ["A", "B", "C", "D"], "Val": [75, 45, 90, 60]})).mark_bar(height=14, cornerRadiusEnd=4).encode(x=alt.X('Val:Q', axis=None), y=alt.Y('Metric:N', axis=None), color=alt.Color('Metric:N', scale=alt.Scale(range=["#ec4899", "#38bdf8", "#a855f7", "#4ade80"]), legend=None)).properties(height=160)
+    bars = alt.Chart(pd.DataFrame({"Metric": ["A", "B", "C", "D"], "Val": [40, 65, 80, 55]})).mark_bar(height=14, cornerRadiusEnd=4).encode(x=alt.X('Val:Q', axis=None), y=alt.Y('Metric:N', axis=None), color=alt.Color('Metric:N', scale=alt.Scale(range=["#ec4899", "#38bdf8", "#a855f7", "#4ade80"]), legend=None)).properties(height=160)
     st.altair_chart(bars, use_container_width=True)
 with r2_c3:
     st.markdown("<p style='font-size:12px; color:#94a3b8; font-weight:bold;'>📈 MULTI-LAYER TRAJECTORY VELOCITY</p>", unsafe_allow_html=True)
@@ -118,7 +118,7 @@ with r3_c3:
     st.altair_chart(us_geo, use_container_width=True)
 with r3_c4:
     st.markdown("<p style='font-size:12px; color:#94a3b8; font-weight:bold;'>🇪🇺 EUROPE MARKET SHARE MAP</p>", unsafe_allow_html=True)
-    eu_geo = alt.Chart(alt.topo_feature(data.world_110m.url, 'countries')).mark_geoshape(stroke="#121629", strokeWidth=0.5).encode(color=alt.Color('Value:Q', scale=alt.Scale(scheme='plasma'), legend=None)).transform_lookup(lookup='id', from_=alt.LookupData(df_geo[df_geo["Type"]=="EU"], 'id', ['Value'])).properties(height=150).project(type='mercator', scale=160, center=[15, 50])
+    eu_geo = alt.Chart(alt.topo_feature(data.world_110m.url, 'countries')).mark_geoshape(stroke="#121629", strokeWidth=0.5).encode(color=alt.Color('Value:Q', scale=alt.Scale(scheme='plasma'), legend=None)).transform_lookup(lookup='id', from_=alt.LookupData(df_geo[df_geo["Type"]=="EU"], 'id', ['Value'])).properties(height=150).project(type='mercator', scale=160, center=[10, 50])
     st.altair_chart(eu_geo, use_container_width=True)
 
 st.markdown("---")
@@ -135,5 +135,5 @@ with r4_c2:
     st.altair_chart(area, use_container_width=True)
 with r4_c3:
     st.markdown("<p style='font-size:12px; color:#94a3b8; font-weight:bold;'>📐 CAPACITY PRIORITIZATION PYRAMID</p>", unsafe_allow_html=True)
-    pyr = alt.Chart(pd.DataFrame({"Layer": ["Tier 1", "Tier 2", "Tier 3", "Tier 4"], "Width": [40, 60, 80, 100]})).mark_bar(align="center").encode(x=alt.X('Width:Q', axis=None), y=alt.Y('Layer:N', sort='descending', axis=None), color=alt.Color('Layer:N', scale=alt.Scale(scheme='cool'), legend=None)).properties(height=140)
+    pyr = alt.Chart(pd.DataFrame({"Layer": ["Tier 1", "Tier 2", "Tier 3", "Tier 4"], "Width": [100, 75, 50, 25]})).mark_bar(align="center").encode(x=alt.X('Width:Q', axis=None), y=alt.Y('Layer:N', sort='descending', axis=None), color=alt.Color('Layer:N', scale=alt.Scale(scheme='cool'), legend=None)).properties(height=140)
     st.altair_chart(pyr, use_container_width=True)
