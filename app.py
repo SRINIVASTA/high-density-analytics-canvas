@@ -2,156 +2,146 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import altair as alt
+from vega_datasets import data
 
-# --- 1. CONFIGURATION ---
+# --- 1. SET UP DESKTOP LAYOUT CONFIGURATION ---
 st.set_page_config(
-    page_title="High-Density Neon Infographic",
+    page_title="Enterprise Analytics - High-Density Canvas",
     layout="wide", 
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. ADVANCED STYLESHEET INJECTION ---
+# --- 2. CUSTOM NEON DARK THEME INJECTION (CSS) ---
 st.markdown("""
     <style>
-        .stApp { background-color: #16182c !important; color: #ffffff !important; }
-        h1, h2, h3, h4, h5, h6, p, span, label { color: #ffffff !important; font-family: monospace, sans-serif; }
-        .stMarkdown { margin-bottom: 0px !important; }
-        
-        /* Pictogram Silhouette Array Emulation Style */
-        .icon-grid { display: flex; gap: 8px; font-size: 24px; margin-bottom: 15px; }
-        .icon-active { color: #3296ff; }
-        .icon-active-pink { color: #f25c8c; }
-        .icon-muted { color: #2c2f4d; }
+        .stApp {
+            background-color: #171b30 !important;
+            color: #ffffff !important;
+        }
+        h1, h2, h3, h4, h5, h6, p, label, span, .stMarkdown {
+            color: #ffffff !important;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+        }
+        [data-testid="stMetricValue"] {
+            color: #f43f5e !important;
+            font-size: 2.2rem !important;
+            font-weight: 700;
+        }
+        [data-testid="stMetricLabel"] {
+            color: #94a3b8 !important;
+        }
     </style>
 """, unsafe_allow_html=True)
 
-# --- 3. ALTAIR COLOR REGISTRATION ---
-def apply_neon_theme():
+# --- 3. ALTAIR NEON DATA GLOBAL VISUAL THEME CONFIG ---
+def neon_theme():
     return {
         'config': {
-            'background': '#16182c',
+            'background': '#171b30',
             'view': {'stroke': 'transparent'},
             'axis': {
-                'domainColor': '#383b5c', 'gridColor': '#23253f',
-                'labelColor': '#9ba1c6', 'titleColor': '#ffffff'
+                'domainColor': '#475569',
+                'gridColor': '#334155',
+                'labelColor': '#94a3b8',
+                'titleColor': '#ffffff',
+                'tickColor': '#475569'
             },
-            'range': {'category': ['#f25c8c', '#3296ff', '#bf62fc', '#1ad492', '#ffbc42']}
+            'legend': {
+                'labelColor': '#94a3b8',
+                'titleColor': '#ffffff'
+            },
+            'range': {
+                'category': ['#f43f5e', '#38bdf8', '#a855f7', '#34d399', '#fbbf24']
+            }
         }
     }
-alt.themes.register('neon_theme', apply_neon_theme)
+alt.themes.register('neon_theme', neon_theme)
 alt.themes.enable('neon_theme')
 
-# --- 4. TOP ROW: METRIC RINGS & HUMAN ARRAYS ---
-st.title("⚡ Ultra High-Density Diagnostic Canvas")
+# --- 4. GENERATE GEOGRAPHIC ENTERPRISE DATASET ---
+@st.cache_data
+def get_geo_enterprise_data():
+    np.random.seed(42)
+    # Target specific US state IDs matching standard geographic topofeatures 
+    us_states = [6, 12, 36, 48, 53] # California, Florida, New York, Texas, Washington
+    # Target specific European numeric country IDs matching vega maps
+    eu_countries = [250, 276, 380, 724, 826] # France, Germany, Italy, Spain, UK
+    
+    rows = []
+    for _ in range(1500):
+        # US State data generation loop
+        state_id = np.random.choice(us_states)
+        rev_us = float(np.random.exponential(scale=7000) + 2000)
+        rows.append({"type": "US", "id": state_id, "Revenue": rev_us})
+        
+        # European Country data generation loop
+        country_id = np.random.choice(eu_countries)
+        rev_eu = float(np.random.exponential(scale=6500) + 1500)
+        rows.append({"type": "EU", "id": country_id, "Revenue": rev_eu})
+        
+    return pd.DataFrame(rows)
+
+df_geo = get_geo_enterprise_data()
+
+# --- 5. DATA PRE-AGGREGATION ---
+df_us_agg = df_geo[df_geo["type"] == "US"].groupby("id")["Revenue"].sum().reset_index()
+df_eu_agg = df_geo[df_geo["type"] == "EU"].groupby("id")["Revenue"].sum().reset_index()
+
+# --- 6. APP CONTAINER LAYOUT ---
+st.title("📊 High-Density Infographic Canvas")
+st.caption("Countrywise Operations Metrics Dashboard Panel Grid")
 st.markdown("---")
 
-top_col1, top_col2, top_col3 = st.columns([1.5, 1.5, 2])
+# --- ROW 1: CORE COUNTRYWISE GRAPHIC LAYOUT ---
+map_col1, map_col2 = st.columns(2)
 
-with top_col1:
-    st.markdown("##### 🎯 TARGET THRESHOLDS")
-    ring_sub1, ring_sub2 = st.columns(2)
+with map_col1:
+    st.markdown("#### 🇺🇸 US Regional Performance Territory Map")
     
-    def make_ring(val, color):
-        df = pd.DataFrame({"v": [val, 100-val], "c": ["A", "B"]})
-        c = alt.Chart(df).mark_arc(innerRadius=32, outerRadius=45).encode(
-            theta="v:Q", color=alt.Color("c:N", scale=alt.Scale(domain=["A","B"], range=[color, "#23253f"]), legend=None)
-        ).properties(width=100, height=100)
-        t = alt.Chart(pd.DataFrame({"t": [f"{val}%"]})).mark_text(align='center', fontSize=14, fontWeight='bold', color='#fff').encode(text='t:N')
-        return c + t
-
-    with ring_sub1:
-        st.altair_chart(make_ring(80, "#f25c8c"))
-        st.altair_chart(make_ring(50, "#bf62fc"))
-    with ring_sub2:
-        st.altair_chart(make_ring(75, "#3296ff"))
-        st.altair_chart(make_ring(25, "#1ad492"))
-
-with top_col2:
-    st.markdown("##### 👥 DEMOGRAPHIC DENSITY (SILHOUETTE ARRAYS)")
-    # Replicating the human stick figure charts using icon characters & flex grids
-    st.caption("Segment Alpha (Male Allocation Index)")
-    st.markdown("<div class='icon-grid'>" + "".join(["<span class='icon-active'>🧍</span>"]*7 + ["<span class='icon-muted'>🧍</span>"]*3) + "</div>", unsafe_allow_html=True)
+    # 1. Fetch geographic shape arrays for the United States
+    states_topo = alt.topo_feature(data.us_10m.url, 'states')
     
-    st.caption("Segment Beta (Female Allocation Index)")
-    st.markdown("<div class='icon-grid'>" + "".join(["<span class='icon-active-pink'>🧍‍♀️</span>"]*4 + ["<span class='icon-muted'>🧍‍♀️</span>"]*6) + "</div>", unsafe_allow_html=True)
+    # 2. Build the visual geographic layer
+    us_map = alt.Chart(states_topo).mark_geoshape().encode(
+        color=alt.Color('Revenue:Q', 
+                        scale=alt.Scale(scheme='magma', domain=[df_us_agg['Revenue'].min(), df_us_agg['Revenue'].max()]),
+                        legend=alt.Legend(title="Sales Revenue ($)", orient='bottom')),
+        tooltip=[alt.Tooltip('Revenue:Q', format='$,.2f')]
+    ).transform_lookup(
+        lookup='id',
+        from_=alt.LookupData(df_us_agg, 'id', ['Revenue'])
+    ).properties(
+        width=550,
+        height=350
+    ).project(
+        type='albersUsa'
+    )
+    st.altair_chart(us_map, use_container_width=True)
 
-with top_col3:
-    st.markdown("##### 💠 POLAR RADAR GRAPH (HEXAGON OVERLAY)")
-    # Building a custom structural polygon layer matching the geometric purple web shape
-    hex_data = pd.DataFrame({
-        'x': [0, 0.86, 0.86, 0, -0.86, -0.86, 0],
-        'y': [1, 0.5, -0.5, -1, -0.5, 0.5, 1],
-        'order': [1, 2, 3, 4, 5, 6, 7]
-    })
-    hex_chart = alt.Chart(hex_data).mark_line(color="#bf62fc", strokeWidth=2).encode(
-        x=alt.X('x:Q', scale=alt.Scale(domain=[-1.5, 1.5]), axis=None),
-        y=alt.Y('y:Q', scale=alt.Scale(domain=[-1.5, 1.5]), axis=None),
-        order='order:O'
-    ).properties(width=180, height=180)
+with map_col2:
+    st.markdown("#### 🇪🇺 European Country Market Share Map")
     
-    fill_chart = alt.Chart(hex_data).mark_area(color="#bf62fc", opacity=0.15).encode(x='x:Q', y='y:Q', order='order:O')
-    st.altair_chart(hex_chart + fill_chart, use_container_width=True)
+    # 1. Fetch geographic shape arrays for the World 
+    world_topo = alt.topo_feature(data.world_10m.url, 'countries')
+    
+    # 2. Build the visual geographic layer for Europe boundaries
+    eu_map = alt.Chart(world_topo).mark_geoshape(stroke="#171b30", strokeWidth=1).encode(
+        color=alt.Color('Revenue:Q', 
+                        scale=alt.Scale(scheme='plasma', domain=[df_eu_agg['Revenue'].min(), df_eu_agg['Revenue'].max()]),
+                        legend=alt.Legend(title="Market Volume ($)", orient='bottom')),
+        tooltip=[alt.Tooltip('Revenue:Q', format='$,.2f')]
+    ).transform_lookup(
+        lookup='id',
+        from_=alt.LookupData(df_eu_agg, 'id', ['Revenue'])
+    ).properties(
+        width=550,
+        height=350
+    ).project(
+        type='mercator',
+        scale=380,              # Zoom coordinate matching image frame bounds
+        center=[10, 52]         # Map coordinates focused over Continental Europe
+    )
+    st.altair_chart(eu_map, use_container_width=True)
 
 st.markdown("---")
-
-# --- 5. MIDDLE ROW: DISTRIBUTIONS & MATRIX SCATTER PLOTS ---
-mid_col1, mid_col2, mid_col3 = st.columns(3)
-
-with mid_col1:
-    st.markdown("##### 🍩 PIE CUT VARIANT")
-    pie_df = pd.DataFrame({"cat": ["ONE", "TWO", "THREE", "FOUR"], "val": [40, 30, 15, 15]})
-    pie = alt.Chart(pie_df).mark_arc(innerRadius=25).encode(
-        theta="val:Q", color="cat:N"
-    ).properties(height=180)
-    st.altair_chart(pie, use_container_width=True)
-
-with mid_col2:
-    st.markdown("##### 📊 SCATTER SCALAR VARIANCE")
-    # Generates the grid dot chart found in the top-center of the reference image
-    np.random.seed(10)
-    scatter_df = pd.DataFrame({'X-Coord': np.random.randint(10, 70, 15), 'Y-Coord': np.random.randint(5, 45, 15)})
-    scatter = alt.Chart(scatter_df).mark_circle(size=70, color="#f25c8c").encode(
-        x=alt.X('X-Coord:Q', scale=alt.Scale(domain=[0, 70])),
-        y=alt.Y('Y-Coord:Q', scale=alt.Scale(domain=[0, 50]))
-    ).properties(height=180)
-    st.altair_chart(scatter, use_container_width=True)
-
-with mid_col3:
-    st.markdown("##### 📊 BAR VALUE SCALE")
-    bar_df = pd.DataFrame({"M": ["Jan", "Feb", "Mar", "Apr", "May", "Jun"], "V": [1, 2, 3, 4, 5, 6]})
-    bars = alt.Chart(bar_df).mark_bar(size=14, color="#f25c8c").encode(
-        x=alt.X("M:N", sort=None, title=None), y=alt.Y("V:Q", title=None)
-    ).properties(height=180)
-    st.altair_chart(bars, use_container_width=True)
-
-st.markdown("---")
-
-# --- 6. BOTTOM ROW: MULTI-LAYER TRAJECTORY CORNER ---
-bot_col1, bot_col2 = st.columns([2, 1])
-
-with bot_col1:
-    st.markdown("##### 📈 SPLINE TIMELINE HARMONICS")
-    # The multi-layered smooth wave curve at the center bottom
-    time_points = np.linspace(0, 10, 30)
-    wave_df = pd.DataFrame({
-        'Timeline': np.tile(time_points, 2),
-        'Amplitude': np.concatenate([np.sin(time_points)*15 + 25, np.cos(time_points)*10 + 20]),
-        'Group': np.concatenate([["Metric A"]*30, ["Metric B"]*30])
-    })
-    wave_chart = alt.Chart(wave_df).mark_area(interpolate='monotone', opacity=0.2).encode(
-        x=alt.X('Timeline:Q', axis=None),
-        y=alt.Y('Amplitude:Q', axis=None),
-        color='Group:N'
-    ).properties(height=160)
-    st.altair_chart(wave_chart, use_container_width=True)
-
-with bot_col2:
-    st.markdown("##### 📐 DISTRIBUTION SEGMENT TRIANGLE")
-    # Creates the stylized triangle pyramid layers found on the bottom right
-    pyramid_df = pd.DataFrame({"Layer": ["Tier 1", "Tier 2", "Tier 3"], "Size": [10, 20, 30]})
-    pyramid = alt.Chart(pyramid_df).mark_bar().encode(
-        x=alt.X("Size:Q", axis=None),
-        y=alt.Y("Layer:N", sort="descending", title=None),
-        color=alt.Color("Layer:N", scale=alt.Scale(scheme="magma"), legend=None)
-    ).properties(height=160)
-    st.altair_chart(pyramid, use_container_width=True)
+st.info("💡 Hint: Hover cursor directly over active map country borders to drill down into live localized dataset metrics values.")
